@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>Line by Line Code Coverage in GAP By Example</title>
+        <link rel="stylesheet" href="http://www.azumanga.org/theme/css/main.css" />
+        <link href="http://www.azumanga.org/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Azumanga Blog Atom Feed" />
+
+        <!--[if IE]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="http://www.azumanga.org/">Azumanga Blog </a></h1>
+                <nav><ul>
+                    <li><a href="http://www.azumanga.org/category/gym.html">gym</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="http://www.azumanga.org/drafts/line-by-line-code-coverage-in-gap-by-example.html" rel="bookmark"
+           title="Permalink to Line by Line Code Coverage in GAP By Example">Line by Line Code Coverage in GAP By Example</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2015-01-05T00:00:00+01:00">
+                Published: Mon 05 January 2015
+        </abbr>
+		<br />
+        <abbr class="modified" title="2015-01-05T00:00:00+01:00">
+                Updated: Mon 05 January 2015
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="http://www.azumanga.org/author/chris-jefferson.html">Chris Jefferson</a>
+        </address>
+<p>In <a href="http://www.azumanga.org/category/gap.html">GAP</a>. </p>
+<p>tags: <a href="http://www.azumanga.org/tag/gap.html">GAP</a> <a href="http://www.azumanga.org/tag/profiling.html">Profiling</a> <a href="http://www.azumanga.org/tag/testing.html">Testing</a> </p>
+</footer><!-- /.post-info -->      <p>The purpose of this article is to show how to use GAP's new line-by-line profiler / code coverage. We will do this with by looking at looking at how running GAP's test suite, finding some untested code and adding a test. Working through this tutorial would be an excellent way for you to also help extend GAP's test coverage!</p>
+<h1>Installing</h1>
+<p>Hopefully in the near future there will be a new release of GAP with line by line profiling built-in (I will hopefully update this page when that happens). For now, you need the latested development version of GAP.</p>
+<ul>
+<li>
+<p>A working copy of the <a href="https://github.com/gap-system/gap">latest development version of GAP</a>. Be sure to read the documentation to get the packages you will need to get a working basic copy of GAP!</p>
+</li>
+<li>
+<p>The <a href="https://github.com/ChrisJefferson/profiling">profile package</a>. To install the package run the following commands from inside GAP's pkg directory.</p>
+<div class="highlight"><pre>git clone https://github.com/ChrisJefferson/profiling
+<span class="nb">cd </span>profiling <span class="o">&amp;&amp;</span> ./configure <span class="o">&amp;&amp;</span> make
+</pre></div>
+
+
+</li>
+</ul>
+<p>You can check everything is working by starting gap and typing <code>LoadPackage("profiling");</code>.</p>
+<p>Now we are ready to do some code coverage and profiling! We do these profiling and code coverage in almost exactly the same way, the difference is (as you might expect) code coverage does not store any information about how long code took to execute, only that it executed at all.</p>
+<h1>Quickstart Guide</h1>
+<p>We will start with a quick guide to code coverage, with some brief comments. We will explain later how to do these things in greater depth!</p>
+<div class="highlight"><pre>mkdir outdir <span class="c"># Somewhere to put our output</span>
+gap.sh --cover testcover.gz <span class="c"># Replace gap.sh with however you run gap</span>
+...
+gap&gt; Read<span class="o">(</span>Filename<span class="o">(</span> DirectoriesLibrary<span class="o">(</span> <span class="s2">&quot;tst&quot;</span> <span class="o">)</span>, <span class="s2">&quot;testinstall.g&quot;</span> <span class="o">)</span> <span class="o">)</span><span class="p">;</span> <span class="nv">$ </span>Run GAP<span class="err">&#39;</span>s quick <span class="nb">test </span>suite, put your own code here
+gap&gt; UnprofileLineByLine<span class="o">()</span><span class="p">;</span> <span class="nv">$ </span>End profiling. At this point we could quit GAP, <span class="k">if</span> we wanted.
+gap&gt; LoadPackage<span class="o">(</span><span class="s2">&quot;profiling&quot;</span><span class="o">)</span><span class="p">;</span> <span class="nv">$ </span>We only need the package <span class="k">for</span> reading profiles
+gap&gt; x :<span class="o">=</span> ReadLineByLineProfile<span class="o">(</span><span class="s2">&quot;testcover.gz&quot;</span><span class="o">)</span><span class="p">;;</span> <span class="nv">$ </span>Read profile data back in
+gap&gt; OutputAnnotatedCodeCoverageFiles<span class="o">(</span>x, <span class="s2">&quot;outdir&quot;</span><span class="o">)</span><span class="p">;</span> <span class="nv">$ </span>lots of files are put in outdir!
+</pre></div>
+
+
+<p>After running this, open <code>index.html</code> from <code>outdir</code>. Alternatively, you can see a copy of the coverage for all of GAP's tests <a href="//gap-test-coverage/latest">here</a>.</p>
+<h1>Extended Guide</h1>
+<p>There is a GAP function, </p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>blogroll</h2>
+                        <ul>
+                            <li><a href="http://getpelican.com/">Pelican</a></li>
+                            <li><a href="http://python.org/">Python.org</a></li>
+                            <li><a href="http://jinja.pocoo.org/">Jinja2</a></li>
+                            <li><a href="#">You can modify those links in your config file</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="http://www.azumanga.org/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                            <li><a href="#">You can add links in your config file</a></li>
+                            <li><a href="#">Another social link</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+<script type="text/javascript">
+    var disqus_shortname = 'azumanga';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+</body>
+</html>

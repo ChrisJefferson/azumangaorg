@@ -1,0 +1,174 @@
+The standard sort function in C++ is a curious beast. It neatly encapsulates many of the trade-offs and features of modern C++. In this article I intend to dive deep into the implementation of std::sort in gcc. In particular, the changes I made to make it work correctly in C++11 (and the bug I accidentally introduced while doing that.. woops).
+
+One interesting characteristic of std::sort is that it is an easy way to run into undefined behaviour. The C++ standard says that std::sort requires a "strict weak ordering". This boils down to two requirements:
+
+  * !comp(a,a)
+  * comp(a,b) && comp(b,c) implies comp(a,c)
+
+If these requirements are not met, then undefined behaviour occurs. This means the C++ compiler is allowed to do anything, including produce incorrect input, or crash.
+
+Let's see the crazy kinds of things we can make happen.
+
+Here is an example, about as simple as they come. There are no tricks here, that 'int x[17]={0};' sets all elements of that array to 0. If you prefer full C++ code, feel free to replace it with [[std::vector<int> x(17)]], and the sort with [[x.begin(), x.end()]].
+
+
+[[
+
+#include <algorithm>
+
+bool compare(int i, int j)
+{ return i <= j; }
+
+int main(void)
+{
+	int x[17] = {0};
+	std::sort(x, x + 17, compare);
+}
+
+]]
+
+Running this code on my computer, with g++ 4.8.2, produces a segmentation fault, and the program crashes. It turns out that 17 is a magic number. Any length shorter than that and the program works correctly, anything longer and it crashes. We will see later what is special about 16.
+
+The problem here is that we used <= instead of <. Therefore we violated the condition '!comp(a,a)'.
+
+What about if we violate the second condition? I have often seen variants of the following piece of code:
+
+[[
+#include <algorithm>
+
+bool compare(int i, int j)
+{
+  if(i==j) return false;
+  return rand() % 2;
+}
+
+int main(void)
+{
+	int x[3] = {1,2,3};
+	std::sort(x, x + 3, compare);
+}
+]]
+
+This is an attempt to randomize the order of an array (if you actually want to randomize the order of an array, use std::random_shuffle). We add the code [[if(i==j) return false;]] to our comparator to make sure we don't violate '[[!comp(a,a)]]'. After tweaking the code to change the random seed for each execution of the program, I find that this program crashes about 20% of the time.
+
+This leads to an obvious question -- what is going on inside [[std::sort]] that leads to these crashes, and why does the C++ standard say that these crashes are allowed? To understand these questions, we have to look inside the implementation of std::sort.
+
+
+The basic sort function inside gcc is an introsort, which is a variant of quicksort. I am not going to explain the exact design of an in-place quicksort here, so if you don't already know, please go and have a read of wikipedia.
+
+One recursive call of a quicksort has two steps. Firstly find a pivot, then do the partitioning. Gcc uses a ''median of three'' pivot, where we choose the median of the first, middle and last element of the array (sortof. There is a complexity we'll come back to later). One we have a pivot, we have to do inplace partitioning, which leads to the following tiny method, which I reproduce directly from gcc 4.8.2. This takes two iterators and a pivot, and orders the elements of the range [[ [begin,end) ]] such that all elements less than *__pivot are at the start, and all elements larger than *__pivot are at the end (those equal to __pivot can end up anywhere), and returns the place where we switch from smaller than *__pivot to larger.
+
+[[
+template<typename _RandomAccessIterator, typename _Tp>
+    _RandomAccessIterator
+    __unguarded_partition(_RandomAccessIterator __first,
+                          _RandomAccessIterator __last, const _Tp& __pivot)
+    {
+      while (true)
+        {
+          while (*__first < __pivot)
+            ++__first;
+          --__last;
+          while (__pivot < *__last)
+            --__last;
+          if (!(__first < __last))
+            return __first;
+          std::iter_swap(__first, __last);
+          ++__first;
+        }
+    }
+]]
+
+At first glance this algorithm looks incorrect. Neither of the inner 'while' statements which go along the array looking for something larger, or smaller, than the pivot have any check to make sure we don't fall off the ends of the array!
+
+If everything in the range [[ [begin,end) ]] is less than __pivot, then [[while(*__first < __pivot) ++__first ]] would go straight along the array and off the end. Similarly, if everything in the range was larger than __pivot, the decrementing of __last would go off the start of the array. Fortunately, when we choose our pivot we chose the median of 3 values, so we know that there is something greater than or equal our pivot, and something less than our equal our pivot, somewhere in the array. Yay!
+
+However, this just means that we will make it safely around this loop at least once. What happens the second time around? Well, the [[std::iter_swap(__first, __last)]] will make sure there is something smaller than __pivot at __first, and something larger at __last. Therefore __first is never going to increment past where __last is now, and similarly __last is never going to decrement below where __first is.
+
+One final trick in this code. We will never reach a situation where __last < __first - 1, as by definition everything before __first is less than or equal __pivot, and everything after __last is larger or equal than __pivot. This means that we would save almost nothing by checking if '__first == __last' has happened at every iteration of the while loops on lines X and Y.
+
+So, where did we use the fact our ordering is a strict weak ordering? The main usage was that given 3 values A,B,C, if B is the median of these values then at least one of B<A and B<C is false, and at least one of A<B and C<B is false. Also, we certainly require that each time we call < we get the same value!
+
+
+While this is the basic core of our sorting algorithm, there are still two other important issues. Firstly, it is well known that quicksort has worst case O(n^2) behaviour. The C++ standard allows this, if you want guaranteed O(n log n) behavior then use std::heap_sort.
+
+However, we would like our sort to achieve O(n log n) in std::sort, even though it is not required. This is done by limiting the recursive depth of quick sort to O(log(last - first)*2). If we reach that limit, then we assume that quick sort is performing badly (it is quite hard to reach this case, even on purpose). In this situation, we switch to sorting the current cell (not the whole array) with std::heap_sort. This does not throw away all the work done by quicksort so far, only change the sort used in the remaining cell.
+
+We also stop quicksorting once we find outselves partitioning an array of length 16 or less. (That is where 17 came from in out first example!) This means when our quicksort is eventually finished, our range is not fully sorted, but each value is no more than 16 locations away from where it should be.
+
+This is done because using a final pass of insertion sort is more efficient than quicksorting many tiny arrays. We could do our insertion sort on each of our tiny arrays as we find them but it turns out it is faster to wait until the end and do one big insertion sort over the whole range, throwing away the information we had about where the boundaries are between sorted blocks of data (bla explain better).
+
+This final insertion sort pass is done by the imaginatively named __final_insertion_sort. We make two uses here of our strict weak ordering to avoid the use of boundary checks.
+
+The first boring implementation of insertion sort is in the method __insertion_sort. I will once again produce this in full, although there are some tricky parts of this method. I am going to clean up this method a little based on the source. I will come back to the differences later (the changes are just to do with supporting C++03 and C++11 in the same code base)
+
+[[
+  template<typename _RandomAccessIterator>
+    void
+    __insertion_sort(_RandomAccessIterator __first,
+                     _RandomAccessIterator __last)
+    {
+      if (__first == __last)
+        return;
+
+      for (_RandomAccessIterator __i = __first + 1; __i != __last; ++__i)
+        {
+          if (*__i < *__first)
+            {
+              typename iterator_traits<_RandomAccessIterator>::value_type
+              __val = *__i;
+              copy_backward(__first, __i, __i + 1);
+              *__first = __val;
+            }
+          else
+            std::__unguarded_linear_insert(__i);
+        }
+    }
+]]
+
+So, __insertion_sort has a special check to see if the element we are sorting such be put at the very start of the range [__first, __last), on line X. In this case, we move everything along one, and pop it at the start. If not, we call __unguarded_linear_insert. This method is much simpler:
+
+[[
+  template<typename _RandomAccessIterator>
+    void
+    __unguarded_linear_insert(_RandomAccessIterator __last)
+    {
+      typename iterator_traits<_RandomAccessIterator>::value_type
+        __val = *__last;
+      _RandomAccessIterator __next = __last;
+      --__next;
+      while (__val < *__next)
+        {
+          *__last = *__next;
+          __last = __next;
+          --__next;
+        }
+      *__last = __val;
+    }
+]]
+
+__unguarded_linear_insert just moves each element in the range up one place, until we find the right place to find __last, and we then place it. This function could not do range checking even if it wanted to, it is not given the start of the array! However, we know we will only call it in the situation where at least the first item in the range is smaller than the value we are positioning.
+
+There is now only one final twist in the tail. The algorithm which is called by sort is not __insertion_sort, but __final_insertion_sort. What's the difference?
+
+[[
+  template<typename _RandomAccessIterator>
+    void
+    __final_insertion_sort(_RandomAccessIterator __first,
+                           _RandomAccessIterator __last)
+    {
+      if (__last - __first > int(_S_threshold))
+        {
+          std::__insertion_sort(__first, __first + int(_S_threshold));
+          std::__unguarded_insertion_sort(__first + int(_S_threshold), __last);
+        }
+      else
+        std::__insertion_sort(__first, __last);
+    }
+]]
+
+__final_insertion_sort uses the mysterious 'int(_S_threshold)'. This is the size at which we stopped doing out quicksort. Our quicksort produced a series of blocks of size up to _S_threshold which are not themselves sorted, but there is nothing bigger in an earlier block. This means that there must be at least one block before the location __first + int(_S_threshold). It might be of size _S_threshold, it mist be of size 1. Whatever its size, all values in that first block must be less than or equal *(__first + int(_S_threshold)).
+
+This convoluted once we reach __first + int(_S_threshold) we can stop bothering doing any bounds checking and just always use __unguarded_linear_insert, so that is exactly what we do.
+
+Phew! So that's the whole thing.
