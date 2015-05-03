@@ -6,6 +6,9 @@
         {% if DISPLAY_CATEGORIES_ON_POSTINFO %}
 	        <span>| in <a href="{{ SITEURL }}/{{ article.category.url }}">{{ article.category }}</a></span>
         {% endif %}
+        {% if article.meps %}
+        <span> | <img src="/images/mepslogo.png" alt="meps" style="vertical-align: bottom;"> Total: {{ article.meps }} </span>
+        {% endif %}
 {% include 'taglist.html' %}
 {% import 'translations.html' as translations with context %}
 {{ translations.translations_for(article) }}
