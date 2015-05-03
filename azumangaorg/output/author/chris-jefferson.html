@@ -15,51 +15,57 @@
         <header id="banner" class="body">
                 <h1><a href="http://www.azumanga.org/">Azumanga Blog </a></h1>
                 <nav><ul>
-                    <li><a href="http://www.azumanga.org/category/gym.html">gym</a></li>
+                    <li><a href="http://www.azumanga.org/category/gap.html">GAP</a></li>
                 </ul>
                 </nav>
         </header><!-- /#banner -->
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="http://www.azumanga.org/exercise-past.html">Exercise Past</a></h1>
+                    <h1 class="entry-title"><a href="http://www.azumanga.org/line-by-line-code-coverage-in-gap-by-example.html">Line by Line Code Coverage in GAP By Example</a></h1>
 <footer class="post-info">
         <span>Mon 05 January 2015</span>
-
-</footer><!-- /.post-info --><p>My most recent trip into exercise began about 18 months ago, when I read a BBC news article which said people should walk 10,000 steps a day (that's about 5km, or 3 miles). That seemed like as good an idea as any! I got a <a href="https://www.fitbit.com/uk/zip">fitbit zip</a> from my lovely wife, and set off!</p>
-<p>At first achieving 10,000 steps was hard work -- if I managed it one day, I would need a rest the next! Eventually I got to the point where it is comfortable, and settled into a routine.</p>
-<p>You can see my success at <a href="http://fitbit.ly/azumanga">fitbit.ly</a>, and alternative (and great) website for quickly viewing fitbit stats. I've passed 7,000,000 steps, and hitting my target on 389 days.</p>
-<p>So, what's my opinion on Fitbit? For beginners, they are great. Don't underestimate the Fitbit Zip, while it is the oldest and simplest product Fitbit make, it has some big advantages:</p>
+<span>| tags: <a href="http://www.azumanga.org/tag/gap.html">GAP</a><a href="http://www.azumanga.org/tag/profiling.html">Profiling</a><a href="http://www.azumanga.org/tag/testing.html">Testing</a></span>
+</footer><!-- /.post-info --><p>The purpose of this article is to show how to use GAP's new line-by-line profiler / code coverage. We will do this with by looking at looking at how running GAP's test suite, finding some untested code and adding a test. Working through this tutorial would be an excellent way for you to also help extend GAP's test coverage!</p>
+<h1>Installing</h1>
+<p>Hopefully in the near future there will be a new release of GAP with line by line profiling built-in (I will hopefully update this page when that happens). For now, you need the latested development version of GAP.</p>
 <ul>
-<li>Runs for 6 months off one tiny battery</li>
-<li>Can be stored easily. Fitbit suggest clipping it to your belt, I kept it on my keyring.</li>
+<li>
+<p>A working copy of the <a href="https://github.com/gap-system/gap">latest development version of GAP</a>. Be sure to read the documentation to get the packages you will need to get a working basic copy of GAP!</p>
+</li>
+<li>
+<p>The <a href="https://github.com/ChrisJefferson/profiling">profile package</a>. To install the package run the following commands from inside GAP's pkg directory.</p>
+<div class="highlight"><pre>git clone https://github.com/ChrisJefferson/profiling
+<span class="nb">cd </span>profiling <span class="o">&amp;&amp;</span> ./configure <span class="o">&amp;&amp;</span> make
+</pre></div>
+
+
+</li>
 </ul>
-<p>The Zip isn't perfect, at first I found my keys were too heavy, and the jingling was making the Fitbit count around double steps. Dumping a bunch of keys I never used got the weight to a more sensible level.</p>
-<p>So, what are the limitations of the Fitbit? The plateau. Walking 10,000 steps takes me about an hour and forty minutes, achieving more steps on a daily basis takes too long. Fitbit doesn't encourage hard exercise -- while you can do your steps faster by going faster, I found it very hard work to go a little faster, it wasn't really helping get the steps much faster, and took away my enjoyment of my evening walk, listening to audio book or podcasts!</p>
-<p>So, while Fitbit was a good start, the time has come to push beyond! Onwards and Upwards!</p><p><a href="http://www.azumanga.org/exercise-past.html#disqus_thread">comments</a></p>                </article>
-            </aside><!-- /#featured -->
-            <!--                 <section id="content" class="body">
-                    <h1>Other articles</h1>
-                    <ol id="posts-list" class="hfeed">
- -->
+<p>You can check everything is working by starting gap and typing <code>LoadPackage("profiling");</code>.</p>
+<p>Now we are ready to do some code coverage and profiling! We do these profiling and code coverage in almost exactly the same way, the difference is (as you might expect) code coverage does not store any information about how long code took to execute, only that it executed at all.</p>
+<h1>Quickstart Guide</h1>
+<p>We will start with a quick guide to code coverage, with some brief comments. We will explain later how to do these things in greater depth!</p>
+<div class="highlight"><pre>mkdir outdir <span class="c"># Somewhere to put our output</span>
+gap.sh --cover testcover.gz <span class="c"># Replace gap.sh with however you run gap</span>
+...
+gap&gt; Read<span class="o">(</span>Filename<span class="o">(</span> DirectoriesLibrary<span class="o">(</span> <span class="s2">&quot;tst&quot;</span> <span class="o">)</span>, <span class="s2">&quot;testinstall.g&quot;</span> <span class="o">)</span> <span class="o">)</span><span class="p">;</span> <span class="nv">$ </span>Run GAP<span class="err">&#39;</span>s quick <span class="nb">test </span>suite, put your own code here
+gap&gt; UnprofileLineByLine<span class="o">()</span><span class="p">;</span> <span class="nv">$ </span>End profiling. At this point we could quit GAP, <span class="k">if</span> we wanted.
+gap&gt; LoadPackage<span class="o">(</span><span class="s2">&quot;profiling&quot;</span><span class="o">)</span><span class="p">;</span> <span class="nv">$ </span>We only need the package <span class="k">for</span> reading profiles
+gap&gt; x :<span class="o">=</span> ReadLineByLineProfile<span class="o">(</span><span class="s2">&quot;testcover.gz&quot;</span><span class="o">)</span><span class="p">;;</span> <span class="nv">$ </span>Read profile data back in
+gap&gt; OutputAnnotatedCodeCoverageFiles<span class="o">(</span>x, <span class="s2">&quot;outdir&quot;</span><span class="o">)</span><span class="p">;</span> <span class="nv">$ </span>lots of files are put in outdir!
+</pre></div>
 
-            <aside id="featured" class="body">
-                <article>
-                    <h1 class="entry-title"><a href="http://www.azumanga.org/gym-introduction.html">Gym Introduction</a></h1>
-<footer class="post-info">
-        <span>Mon 05 January 2015</span>
 
-</footer><!-- /.post-info --><p>While reading the local paper I saw <a href="http://www.timefitness.co.uk/">Time Fitness</a>, a local gym, was running a competition for four people to win a six month gym membership, a weekly meeting with a personal trainer, and all kinds of other help and support.</p>
-<p>Long story short (for today), I applied and won! I've very excited, but don't really want to pollute everyone's Facebook with it every day, so I will put my thoughts, and (hopefully) my progress here.</p><p><a href="http://www.azumanga.org/gym-introduction.html#disqus_thread">comments</a></p>                </article>
-            </aside><!-- /#featured -->
-            <!--                 <section id="content" class="body">
-                    <h1>Other articles</h1>
-                    <ol id="posts-list" class="hfeed">
- -->
-            </ol><!-- /#posts-list -->
+<p>After running this, open <code>index.html</code> from <code>outdir</code>. Alternatively, you can see a copy of the coverage for all of GAP's tests <a href="//gap-test-coverage/latest">here</a>.</p>
+<h1>Extended Guide</h1>
+<p>There is a GAP function, </p><p><a href="http://www.azumanga.org/line-by-line-code-coverage-in-gap-by-example.html#disqus_thread">comments</a></p>                </article>
 <p class="paginator">
     Page 1 / 1
 </p>
+            </aside><!-- /#featured -->
+            <!--  -->
+            </ol><!-- /#posts-list -->
             </section><!-- /#content -->
         <section id="extras" class="body">
                 <div class="blogroll">

@@ -3,8 +3,8 @@
 from __future__ import unicode_literals
 
 AUTHOR = u'Chris Jefferson'
-SITENAME = u'Azumanga Blog'
-SITEURL = 'http://www.azumanga.org'
+SITENAME = u'Six Months To Fitness (and beyond)'
+SITEURL = 'http://fitness.azumanga.org'
 
 DISQUS_SITENAME=u'azumanga'
 

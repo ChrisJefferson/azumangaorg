@@ -3,7 +3,6 @@ Date: 01-05-2015
 Modified: 01-05-2015
 Category: GAP
 Tags: GAP, Profiling, Testing
-Status: draft
 Summary: How to use line code coverage and profiling, and adding tests to GAP
 
 The purpose of this article is to show how to use GAP's new line-by-line profiler / code coverage. We will do this with by looking at looking at how running GAP's test suite, finding some untested code and adding a test. Working through this tutorial would be an excellent way for you to also help extend GAP's test coverage!
