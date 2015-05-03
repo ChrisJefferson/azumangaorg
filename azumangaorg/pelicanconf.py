@@ -36,7 +36,9 @@ SOCIAL = (('Twitter', 'https://twitter.com/Azumanga'),
 
 DEFAULT_PAGINATION = 10
 
+MENUITEMS = (('Fitness', 'http://fitness.azumanga.org'),)
+
 # Uncomment following line if you want document-relative URLs when developing
 #RELATIVE_URLS = True
 
-THEME="/Users/caj/progs/pelican-themes/blueidea"
+THEME="azumangatheme"
