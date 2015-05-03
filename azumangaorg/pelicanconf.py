@@ -10,7 +10,7 @@ DISQUS_SITENAME=u'azumanga'
 
 PATH = 'content'
 
-TIMEZONE = 'Europe/Paris'
+TIMEZONE = 'Europe/London'
 
 DEFAULT_LANG = u'en'
 
@@ -26,15 +26,15 @@ USE_FOLDER_AS_CATEGORY = True
 
 # Blogroll
 LINKS = (('Pelican', 'http://getpelican.com/'),
-         ('Python.org', 'http://python.org/'),
-         ('Jinja2', 'http://jinja.pocoo.org/'),
-         ('You can modify those links in your config file', '#'),)
+         ('Python.org', 'http://python.org/'),)
 
 # Social widget
-SOCIAL = (('You can add links in your config file', '#'),
-          ('Another social link', '#'),)
+SOCIAL = (('Twitter', 'https://twitter.com/Azumanga'),
+          ('Facebook', 'https://www.facebook.com/azumanga'),)
 
 DEFAULT_PAGINATION = 10
 
 # Uncomment following line if you want document-relative URLs when developing
 #RELATIVE_URLS = True
+
+THEME="/Users/caj/progs/pelican-themes/blueidea"

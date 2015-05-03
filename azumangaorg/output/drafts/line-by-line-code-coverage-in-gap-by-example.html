@@ -16,7 +16,8 @@
                 <h1><a href="http://www.azumanga.org/">Azumanga Blog </a></h1>
                 <nav><ul>
                     <li><a href="http://www.azumanga.org/category/gym.html">gym</a></li>
-                </ul></nav>
+                </ul>
+                </nav>
         </header><!-- /#banner -->
 <section id="content" class="body">
   <article>
@@ -28,19 +29,8 @@
 
     <div class="entry-content">
 <footer class="post-info">
-        <abbr class="published" title="2015-01-05T00:00:00+01:00">
-                Published: Mon 05 January 2015
-        </abbr>
-		<br />
-        <abbr class="modified" title="2015-01-05T00:00:00+01:00">
-                Updated: Mon 05 January 2015
-        </abbr>
-
-        <address class="vcard author">
-                By                         <a class="url fn" href="http://www.azumanga.org/author/chris-jefferson.html">Chris Jefferson</a>
-        </address>
-<p>In <a href="http://www.azumanga.org/category/gap.html">GAP</a>. </p>
-<p>tags: <a href="http://www.azumanga.org/tag/gap.html">GAP</a> <a href="http://www.azumanga.org/tag/profiling.html">Profiling</a> <a href="http://www.azumanga.org/tag/testing.html">Testing</a> </p>
+        <span>Mon 05 January 2015</span>
+<span>| tags: <a href="http://www.azumanga.org/tag/gap.html">GAP</a><a href="http://www.azumanga.org/tag/profiling.html">Profiling</a><a href="http://www.azumanga.org/tag/testing.html">Testing</a></span>
 </footer><!-- /.post-info -->      <p>The purpose of this article is to show how to use GAP's new line-by-line profiler / code coverage. We will do this with by looking at looking at how running GAP's test suite, finding some untested code and adding a test. Working through this tutorial would be an excellent way for you to also help extend GAP's test coverage!</p>
 <h1>Installing</h1>
 <p>Hopefully in the near future there will be a new release of GAP with line by line profiling built-in (I will hopefully update this page when that happens). For now, you need the latested development version of GAP.</p>
@@ -85,8 +75,6 @@ gap&gt; OutputAnnotatedCodeCoverageFiles<span class="o">(</span>x, <span class="
                         <ul>
                             <li><a href="http://getpelican.com/">Pelican</a></li>
                             <li><a href="http://python.org/">Python.org</a></li>
-                            <li><a href="http://jinja.pocoo.org/">Jinja2</a></li>
-                            <li><a href="#">You can modify those links in your config file</a></li>
                         </ul>
                 </div><!-- /.blogroll -->
                 <div class="social">
@@ -94,18 +82,14 @@ gap&gt; OutputAnnotatedCodeCoverageFiles<span class="o">(</span>x, <span class="
                         <ul>
                             <li><a href="http://www.azumanga.org/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
 
-                            <li><a href="#">You can add links in your config file</a></li>
-                            <li><a href="#">Another social link</a></li>
+                            <li><a href="https://twitter.com/Azumanga">Twitter</a></li>
+                            <li><a href="https://www.facebook.com/azumanga">Facebook</a></li>
                         </ul>
                 </div><!-- /.social -->
         </section><!-- /#extras -->
 
         <footer id="contentinfo" class="body">
-                <address id="about" class="vcard body">
-                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
-                </address><!-- /#about -->
-
-                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+                <p>Powered by <a href="http://getpelican.com/">Pelican</a>. Theme <a href="https://github.com/blueicefield/pelican-blueidea/">blueidea</a>, inspired by the default theme.</p>
         </footer><!-- /#contentinfo -->
 
 <script type="text/javascript">
@@ -113,7 +97,7 @@ gap&gt; OutputAnnotatedCodeCoverageFiles<span class="o">(</span>x, <span class="
     (function () {
         var s = document.createElement('script'); s.async = true;
         s.type = 'text/javascript';
-        s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
         (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
     }());
 </script>
